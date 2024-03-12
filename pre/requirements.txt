@@ -1,0 +1,9 @@
+torch >=2.0.0, <3.0.0
+datasets
+tokenizers
+transformers
+safetensors
+tqdm
+onnx
+onnxruntime
+onnxscript
