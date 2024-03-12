@@ -1,7 +1,6 @@
 import math
 import torch
-from torch import nn, optim, Tensor
-from torch.nn import functional as F
+from torch import nn, Tensor
 
 
 class CausalMultiheadSelfAttention(nn.Module):
@@ -18,6 +17,7 @@ class CausalMultiheadSelfAttention(nn.Module):
 
         self._n = n_heads
         self._d = d_model
+        self._rsqrt = 1.0 / math.sqrt(d_model // n_heads)
 
         self.qkv_linear = nn.Linear(d_model, 3 * d_model, bias=bias)
         self.projection = nn.Linear(d_model, d_model, bias=bias)
@@ -37,7 +37,7 @@ class CausalMultiheadSelfAttention(nn.Module):
         k = k.view(bs, sl, self._n, -1).transpose(-3, -2)
         v = v.view(bs, sl, self._n, -1).transpose(-3, -2)
 
-        attn = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        attn = (q @ k.transpose(-2, -1)) * self._rsqrt
         attn = attn.masked_fill(self.mask[:, :, :sl, :sl] == 0, float("-inf"))
         attn = attn.softmax(-1)
         attn = self.dropout(attn)
