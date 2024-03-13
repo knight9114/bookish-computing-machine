@@ -61,6 +61,19 @@ def main(argv: tuple[str] | None = None):
             )
             ortnet.save(args.output)
 
+        case ("dynamo", "ptdq"):
+            qi8net = torch.ao.quantization.quantize_dynamic(
+                model=net,
+                qconfig_spec={torch.nn.Linear},
+                dtype=torch.qint8,
+            )
+            ortnet = torch.onnx.dynamo_export(
+                qi8net,
+                torch.LongTensor([[tokenizer.bos_token_id, tokenizer.eos_token_id]]),
+                export_options=torch.onnx.ExportOptions(dynamic_shapes=True),
+            )
+            ortnet.save(args.output)
+
         case _:
             raise NotImplementedError
 
